@@ -272,15 +272,15 @@ async function askChatGPT(message) {
   const targetX = inputRect.x + inputRect.width  * (0.3 + Math.random() * 0.4);
   const targetY = inputRect.y + inputRect.height * (0.3 + Math.random() * 0.4);
   await moveMouseNaturally(targetX, targetY);
-  await jitter(80, 160);
+  await jitter(30, 60);
   await page.mouse.click(targetX, targetY);
-  await jitter(100, 200);
+  await jitter(40, 80);
 
   // ── Step 2: Focus and clear the input via Puppeteer keyboard API ─────────
   // page.focus() sends a real focus event — more reliable than el.focus() inside
   // page.evaluate(), which loses context across async boundaries.
   await page.focus('#prompt-textarea');
-  await jitter(80, 150);
+  await jitter(30, 60);
 
   // Select-all then delete using keyboard shortcuts (works with ProseMirror)
   const mod = process.platform === 'darwin' ? 'Meta' : 'Control';
@@ -291,17 +291,13 @@ async function askChatGPT(message) {
   await page.keyboard.press('Backspace');
   await jitter(60, 120);
 
-  // ── Step 3: Type the message via keyboard (guaranteed to work with ProseMirror)
+  // ── Step 3: Type message with a small fixed delay per character
   // page.keyboard.type() sends real browser keyboard events that ProseMirror's
-  // event handler processes exactly as it would for a human typing.
-  // A small random per-keystroke delay avoids the perfectly-uniform timing
-  // pattern that bot detectors look for.
-  for (const char of message) {
-    await page.keyboard.type(char);
-    await sleep(rand(8, 22));
-  }
+  // event handler processes correctly. A fixed 5ms delay keeps timing natural
+  // while being ~3x faster than the previous randomised 8–22ms per character.
+  await page.keyboard.type(message, { delay: 5 });
 
-  await jitter(150, 300);
+  await jitter(60, 120);
 
   // Verify text was inserted
   const hasText = await page.evaluate(() => {
@@ -311,7 +307,7 @@ async function askChatGPT(message) {
   if (!hasText) throw new Error('Text insertion failed — input is still empty after typing');
 
   // ── Step 4: Click send button with natural mouse movement ─────────────────
-  await jitter(150, 300);
+  await jitter(50, 100);
 
   const sendSel =
     'button[data-testid="send-button"]:not([disabled]), ' +
@@ -331,7 +327,7 @@ async function askChatGPT(message) {
       const bx = btnRect.x + btnRect.width  / 2 + (Math.random() - 0.5) * 8;
       const by = btnRect.y + btnRect.height / 2 + (Math.random() - 0.5) * 8;
       await moveMouseNaturally(bx, by);
-      await jitter(60, 120);
+      await jitter(25, 50);
       await page.mouse.click(bx, by);
     } else {
       await sendBtn.click();
@@ -355,13 +351,13 @@ async function askChatGPT(message) {
 
 // ── Wait for ChatGPT to finish generating (content stability + no stop btn) ──
 async function waitForStreamingComplete() {
-  const STABLE_MS = 2_000;
-  const POLL_MS   = 400;
+  const STABLE_MS = 800;
+  const POLL_MS   = 250;
   const TIMEOUT   = 90_000;
   const start     = Date.now();
 
   // Pause briefly so streaming has time to start before we begin stability checks
-  await sleep(700);
+  await sleep(200);
 
   return new Promise((resolve, reject) => {
     let lastContent = null;
@@ -424,7 +420,7 @@ async function moveMouseNaturally(toX, toY) {
   const cp2x = fromX + (toX - fromX) * rand(0.6, 0.8) + rand(-60, 60);
   const cp2y = fromY + (toY - fromY) * rand(0.6, 0.8) + rand(-60, 60);
 
-  const steps = Math.floor(rand(18, 30));
+  const steps = Math.floor(rand(8, 14));
 
   for (let i = 0; i <= steps; i++) {
     const t  = i / steps;
