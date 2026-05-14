@@ -1,0 +1,14 @@
+{
+  "name": "chatgpt-cage",
+  "version": "2.1.0",
+  "description": "ChatGPT automation bridge — no browser extension required",
+  "scripts": {
+    "chrome":  "node start-chrome.js",
+    "browser": "node browser-server.js",
+    "api":     "node api-server.js"
+  },
+  "dependencies": {
+    "express":   "^4.18.2",
+    "puppeteer": "^24.43.1"
+  }
+}

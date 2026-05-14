@@ -1,0 +1,9 @@
+{
+  "name": "chatgpt-cage",
+  "version": "2.1.0",
+  "scripts": {
+    "chrome":  "cd server && node start-chrome.js",
+    "browser": "cd server && node browser-server.js",
+    "api":     "cd server && node api-server.js"
+  }
+}

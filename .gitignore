@@ -1,0 +1,4 @@
+server/.chatgpt-profile/
+server/node_modules/
+node_modules/
+*.log
