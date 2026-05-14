@@ -15,6 +15,7 @@ ChatGPT Cage drives a real Chrome browser using Puppeteer and exposes a clean HT
 - [API Reference](#api-reference)
 - [Example Client](#example-client)
 - [Dashboards](#dashboards)
+- [Performance](#performance)
 - [Anti-Bot Strategy](#anti-bot-strategy)
 - [Project Structure](#project-structure)
 - [Troubleshooting](#troubleshooting)
@@ -291,9 +292,39 @@ If no real Chrome is found, Puppeteer launches its own Chrome with manual patche
 
 ### Layer 3 — Human-like interactions (always active)
 Every interaction mimics natural human behaviour:
-- **Mouse movement** — cubic Bézier curves with random jitter
-- **Typing** — character-by-character with 8–22 ms random delays
+- **Mouse movement** — cubic Bézier curves with random jitter (8–14 steps)
+- **Typing** — 5 ms fixed delay per character via real keyboard events
 - **Timing** — randomised pauses between all actions
+
+---
+
+## Performance
+
+Typical response times measured on a local machine:
+
+| Message length | Avg total time | Overhead (our code) | ChatGPT thinking |
+|---------------|---------------|---------------------|-----------------|
+| Short (< 50 chars) | ~5s | ~1.5s | ~3–4s |
+| Medium (50–200 chars) | ~7s | ~2s | ~4–6s |
+| Long (200+ chars) | ~10s | ~2.5s | ~6–8s |
+
+**Timeout limits**
+
+| Stage | Limit |
+|-------|-------|
+| ChatGPT must start responding | 60 s |
+| ChatGPT must finish streaming | 90 s |
+| API server hard cutoff | 125 s |
+
+**Optimisations applied**
+
+| Change | Saving |
+|--------|--------|
+| Typing: 8–22 ms/char → 5 ms/char fixed | ~2–4 s |
+| Click jitters reduced (80–200 ms → 30–80 ms) | ~0.4 s |
+| Mouse steps reduced (18–30 → 8–14) | ~0.3 s |
+| Streaming initial sleep (700 ms → 200 ms) | ~0.5 s |
+| Stability window (2000 ms → 800 ms) | ~1.2 s |
 
 ---
 
